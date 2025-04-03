@@ -118,15 +118,20 @@ class PdfFlashcardController extends Controller
     
     public function viewSpecific($timestamp)
     {
+        $timestamp = Carbon::parse($timestamp);  // Assuming you are using Carbon for DateTime handling
 
-        $formattedTimestamp = Carbon::createFromFormat('Y-m-d H:i', $timestamp)->format('Y-m-d H:i:s'); 
+    // Fetch flashcards that match the exact created_at timestamp
+        $flashcard = Flashcard::where('user_id', Auth::id())
+                            ->whereDate('created_at', '=', $timestamp->toDateString()) // Comparing just the date part
+                            ->whereTime('created_at', '=', $timestamp->toTimeString()) // Comparing just the time part
+                            ->get()->first();
 
-        // Fetch flashcards that match the exact created_at timestamp
-        $flashcards = Flashcard::where('user_id', Auth::id())
-                            ->where('created_at', '=', $formattedTimestamp)
-                            ->get();
 
-        dd($flashcards); // Debugging line to check the fetched flashcards
+        // $flashcard->created_at
+        $flashcards = Flashcard::where('user_id', Auth::id())->latest()->get()->groupBy(function($flashcard) {
+            return $flashcard->created_at->format('Y-m-d H:i'); // or any specific format
+        });
+        $flashcards = $flashcards[$flashcards->keys()->first()];
 
         return view('flashcards', compact('flashcards'));
     }
