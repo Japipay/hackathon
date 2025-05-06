@@ -1,0 +1,3 @@
+echo Build started! 
+echo Running build steps... 
+echo Build completed! 
